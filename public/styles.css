@@ -1,0 +1,37 @@
+:root {
+  --bg: #0b1020;
+  --card: #141a2b;
+  --text: #e6e6f0;
+  --muted: #a5a5b3;
+  --user: #4f8cff;
+  --abby: #1bd6a8;
+}
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  background: radial-gradient(circle at 20% -10%, rgba(27,214,168,.15), transparent 40%),
+              radial-gradient(circle at 100% 0%, rgba(75,0,130,.15), transparent 40%),
+              var(--bg);
+  color: var(--text);
+}
+.container { max-width: 720px; margin: 0 auto; padding: 20px; }
+.section { background: rgba(20,26,43,.75); padding: 16px; border-radius: 12px; margin-bottom: 16px; }
+.abby-chat { display: flex; flex-direction: column; height: 420px; }
+.messages { flex: 1; overflow: auto; padding: 8px; border-radius: 8px; background: rgba(255,255,255,.04); }
+.bubble { padding: 8px 12px; border-radius: 14px; margin: 6px 0; max-width: 80%; }
+.bubble.user { background: #2b2f4f; margin-left: auto; color: #fff; }
+.bubble.abby { background: #2a2f1a; color: #e8f7ef; }
+.bubble.typing { font-style: italic; opacity: 0.8; }
+.input-area { display: flex; gap: 8px; padding: 8px; }
+.input-area input { flex: 1; padding: 10px 12px; border-radius: 8px; border: 1px solid #3a3a3a; background: #11152a; color: #eaeaea; }
+.input-area button { padding: 10px 16px; border-radius: 8px; border: none; background: #4f8cff; color: white; cursor: pointer; }
+.persona-editor { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.persona-editor > div { display: flex; flex-direction: column; }
+.persona-editor label { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+.persona-editor input { padding: 8px; border-radius: 6px; border: 1px solid #333; background: #111; color: #fff; }
+@media (max-width: 700px) {
+  .persona-editor { grid-template-columns: 1fr; }
+  .bubble { max-width: 90%; }
+}
