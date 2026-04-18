@@ -4,7 +4,7 @@ const LS_PERSONA = 'abby persona'
 
 export default function PersonaEditor({}) {
   const [persona, setPersona] = useState({
-    name: 'Abby',
+    name: 'Abby AI',
     tone: 'warm, concise, a bit witty',
     loves: 'clarity, practical tips',
     dislikes: 'jargon, negativity',

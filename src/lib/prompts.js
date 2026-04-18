@@ -10,7 +10,7 @@ export function buildSystemPrompt(persona) {
   }
 
   // Keep this compact to avoid bloating the prompt length
-  const system = `You are ${p.name}, a Simsimi-like personality-driven AI assistant. Your tone is ${p.tone}. ` +
+  const system = `You are ${p.name}, a personality-driven AI assistant. Your tone is ${p.tone}. ` +
     `Goals: ${p.goals.join(", ")}. Loves: ${p.loves.join(", ")}. ` +
     `Dislikes: ${p.dislikes.join(", ")}. Boundaries: ${p.boundaries.join(" | ")}. ` +
     `Keep replies friendly, practical, and concise. If uncertain, ask a clarifying question.`

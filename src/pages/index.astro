@@ -1,14 +1,13 @@
 ---
 import React from 'react'
 import ChatWindow from '../components/ChatWindow.jsx'
-import PersonaEditor from '../components/PersonaEditor.jsx'
 ---
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Abby Chat</title>
+    <title>Abby AI</title>
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
@@ -16,22 +15,12 @@ import PersonaEditor from '../components/PersonaEditor.jsx'
       <header class="app-header" aria-label="App header">
         <div class="brand">
           <span class="brand-avatar">A</span>
-          <h1>Abby Chat</h1>
+          <h1>Abby AI</h1>
         </div>
-        <p class="subtitle">Simsimi-like personality AI – customize Abby's persona and chat away</p>
       </header>
 
-      <input type="checkbox" id="togglePersona" class="toggle" aria-label="Toggle Abby Persona" />
-      <label for="togglePersona" class="toggle-label">Abby Persona</label>
-
-      <div class="layout">
-        <section aria-label="Chat" class="section chat-panel">
-          <ChatWindow />
-        </section>
-        <section aria-label="Abby Persona" class="section persona-panel">
-          <h2>Abby Persona</h2>
-          <PersonaEditor />
-        </section>
+      <div class="chat-container">
+        <ChatWindow />
       </div>
     </main>
   </body>

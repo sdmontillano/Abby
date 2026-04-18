@@ -11,7 +11,7 @@ export default function ChatWindow() {
 
   // Load initial history from localStorage
   useEffect(() => {
-    try {
+      try {
       const raw = localStorage.getItem(LS_HISTORY)
       if (raw) setMessages(JSON.parse(raw))
     } catch {
@@ -34,7 +34,11 @@ export default function ChatWindow() {
   }, [])
 
   async function send(message) {
-    if (!message?.trim()) return
+    console.log('Send function called with message:', message)
+    if (!message?.trim()) {
+      console.log('Message is empty, returning')
+      return
+    }
     const userMsg = { role: 'user', content: message }
     const next = [...messages, userMsg]
     setMessages(next)
@@ -55,11 +59,13 @@ export default function ChatWindow() {
         setMessages(updated)
         localStorage.setItem(LS_HISTORY, JSON.stringify(updated))
       } else {
-        const errorMsg = data?.error ?? 'No reply from Abby.'
-        setMessages([...updated, { role: 'abby', content: errorMsg }])
+        const errorMsg = data?.error ?? 'No reply from Abby AI.'
+        const updated = [...next, { role: 'abby', content: errorMsg }]
+        setMessages(updated)
+        localStorage.setItem(LS_HISTORY, JSON.stringify(updated))
       }
     } catch (err) {
-      setMessages([...next, { role: 'abby', content: 'Error: could not reach Abby. Please try again.' }])
+      setMessages([...next, { role: 'abby', content: 'Error: could not reach Abby AI. Please try again.' }])
     } finally {
       setLoading(false)
     }
@@ -75,7 +81,7 @@ export default function ChatWindow() {
           </div>
         ))}
         {loading && (
-          <div className="bubble abby typing">Abby is typing...</div>
+          <div className="bubble abby typing">Abby AI is thinking...</div>
         )}
         <div ref={endRef} />
       </div>
@@ -84,13 +90,16 @@ export default function ChatWindow() {
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask Abby something..."
+          placeholder="Ask Abby AI anything..."
           onKeyDown={(e) => {
             if (e.key === 'Enter') send(input)
           }}
           aria-label="Message to Abby"
         />
-        <button onClick={() => send(input)} aria-label="Send">Send</button>
+        <button onClick={(e) => {
+          console.log('Button clicked! Input value:', input)
+          send(input)
+        }} aria-label="Send">Send</button>
       </div>
     </section>
   )
