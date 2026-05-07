@@ -35,7 +35,15 @@
 
 ## 🚀 Deploy to Vercel (Step-by-Step)
 
-### Step 1: Set Environment Variables in Vercel
+### Step 1: Get FREE Groq API Key
+1. Go to [Groq Console](https://console.groq.com/keys)
+2. Sign up for free account
+3. Create a new API key
+4. Copy the key (starts with `gsk_`)
+
+**Free tier includes**: 14,400 requests/day, Llama 3, Mixtral models
+
+### Step 2: Set Environment Variables in Vercel
 1. Go to [Vercel Dashboard](https://vercel.com/dashboard)
 2. Select your **fun** project
 3. Go to **Settings** → **Environment Variables**
@@ -43,9 +51,9 @@
 
 | Name | Value | Environment |
 |------|-------|-------------|
-| `OPENAI_API_KEY` | `sk-your-actual-openai-key` | Production, Preview, Development |
+| `GROQ_API_KEY` | `gsk_your-groq-api-key-here` | Production, Preview, Development |
 
-**Get your OpenAI API key**: https://platform.openai.com/api-keys
+**Paste your Groq API key** (starts with `gsk_`)
 
 ### Step 2: Set Node.js Version in Vercel
 1. In your Vercel project dashboard, go to **Settings** → **General**
