@@ -70,7 +70,7 @@ export async function POST({ request }) {
         throw new Error('Invalid Groq API key. Get a free key at https://console.groq.com/keys');
       }
       
-      throw new Error(`AI service error (${res.status}). Please try again.`);
+      throw new Error(`AI service error (${res.status}). Details: ${errText}`);
     }
 
     const data = await res.json();
