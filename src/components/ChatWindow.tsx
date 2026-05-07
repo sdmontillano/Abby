@@ -137,17 +137,20 @@ export default function ChatWindow() {
       updatedAt: new Date().toISOString()
     }
     
-    // Update state in correct order to avoid race conditions
+    // Use functional state updates to avoid stale closures
     setMessages([])
     setInput('')
     setError(null)
-    setCurrentConversationId(newConversation.id)
     
-    // Update conversations and save to localStorage
-    const updatedConversations = [newConversation, ...conversations]
-    setConversations(updatedConversations)
-    localStorage.setItem(LS_CONVERSATIONS, JSON.stringify(updatedConversations))
+    setConversations(prevConversations => {
+      const updatedConversations = [newConversation, ...prevConversations]
+      localStorage.setItem(LS_CONVERSATIONS, JSON.stringify(updatedConversations))
+      return updatedConversations
+    })
+    
+    setCurrentConversationId(newConversation.id)
     localStorage.setItem(LS_CURRENT_CONVERSATION, newConversation.id)
+    setSidebarOpen(false)
   }
 
   // Switch to conversation
@@ -171,12 +174,33 @@ export default function ChatWindow() {
     
     if (currentConversationId === conversationId) {
       const nextConv = updatedConversations[0]
-      setCurrentConversationId(nextConv.id)
-      setMessages(nextConv.messages)
-      localStorage.setItem(LS_CURRENT_CONVERSATION, nextConv.id)
+      if (nextConv) {
+        setCurrentConversationId(nextConv.id)
+        setMessages(nextConv.messages)
+        localStorage.setItem(LS_CURRENT_CONVERSATION, nextConv.id)
+      }
     }
     
     localStorage.setItem(LS_CONVERSATIONS, JSON.stringify(updatedConversations))
+  }
+
+  // Delete individual message
+  const deleteMessage = (messageIndex: number) => {
+    if (messageIndex < 0 || messageIndex >= messages.length) return
+    
+    const updatedMessages = messages.filter((_, idx) => idx !== messageIndex)
+    setMessages(updatedMessages)
+    
+    // Update the current conversation in the conversations array
+    if (currentConversationId) {
+      const updatedConversations = conversations.map(conv => 
+        conv.id === currentConversationId 
+          ? { ...conv, messages: updatedMessages, updatedAt: new Date().toISOString() }
+          : conv
+      )
+      setConversations(updatedConversations)
+      localStorage.setItem(LS_CONVERSATIONS, JSON.stringify(updatedConversations))
+    }
   }
 
   // Generate conversation title from first message
@@ -332,6 +356,14 @@ export default function ChatWindow() {
             <div key={idx} className={`message-row ${m.role === 'user' ? 'user' : 'monica'}`}>
               <div className={`message-bubble ${m.role === 'user' ? 'user' : 'monica'}`}>
                 {m.content}
+                <button
+                  onClick={() => deleteMessage(idx)}
+                  className="delete-msg-btn"
+                  aria-label="Delete message"
+                  title="Delete message"
+                >
+                  ×
+                </button>
               </div>
             </div>
           ))}
