@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "postbuild": "node -e \"const fs=require('fs'); const path='.vercel/output/functions/_render.func/.vc-config.json'; const cfg=JSON.parse(fs.readFileSync(path,'utf8')); cfg.runtime='nodejs20.x'; fs.writeFileSync(path,JSON.stringify(cfg, null, 2));\"",
+    "postbuild": "node scripts/patch-vercel-runtime.cjs",
     "preview": "astro preview"
   },
   "dependencies": {
