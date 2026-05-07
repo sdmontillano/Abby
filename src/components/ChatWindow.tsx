@@ -87,23 +87,22 @@ export default function ChatWindow() {
     }
   }, [])
 
-  // Save conversations to localStorage
+  // Save conversations to localStorage (only when messages change, not on currentConversationId change)
   useEffect(() => {
-    if (conversations.length > 0 && currentConversationId) {
+    if (conversations.length > 0 && currentConversationId && messages.length > 0) {
       try {
         const updatedConversations = conversations.map(conv => 
           conv.id === currentConversationId 
             ? { ...conv, messages, updatedAt: new Date().toISOString() }
             : conv
         )
-        setConversations(updatedConversations)
+        // Only update localStorage, not state (to avoid loops)
         localStorage.setItem(LS_CONVERSATIONS, JSON.stringify(updatedConversations))
-        localStorage.setItem(LS_CURRENT_CONVERSATION, currentConversationId)
       } catch (err) {
         console.error('Error saving conversations:', err)
       }
     }
-  }, [messages, currentConversationId])
+  }, [messages])
 
   // Scroll to bottom on new message
   useEffect(() => {
@@ -138,13 +137,15 @@ export default function ChatWindow() {
       updatedAt: new Date().toISOString()
     }
     
-    const updatedConversations = [newConversation, ...conversations]
-    setConversations(updatedConversations)
-    setCurrentConversationId(newConversation.id)
+    // Update state in correct order to avoid race conditions
     setMessages([])
     setInput('')
     setError(null)
+    setCurrentConversationId(newConversation.id)
     
+    // Update conversations and save to localStorage
+    const updatedConversations = [newConversation, ...conversations]
+    setConversations(updatedConversations)
     localStorage.setItem(LS_CONVERSATIONS, JSON.stringify(updatedConversations))
     localStorage.setItem(LS_CURRENT_CONVERSATION, newConversation.id)
   }
