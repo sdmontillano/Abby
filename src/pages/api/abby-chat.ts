@@ -58,6 +58,9 @@ export async function POST({ request }) {
     if (!res.ok) {
       const errText = await res.text();
       console.error('OpenAI API error:', res.status, errText);
+      if (res.status === 429) {
+        throw new Error('AI service is busy (rate limit). Please wait a moment and try again.');
+      }
       throw new Error(`AI service error (${res.status}). Please try again.`);
     }
 
