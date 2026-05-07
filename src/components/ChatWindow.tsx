@@ -270,10 +270,16 @@ export default function ChatWindow() {
 
   return (
     <div className="chatgpt-layout">
+      {/* Sidebar Overlay */}
+      <div 
+        className={`sidebar-overlay ${sidebarOpen ? 'visible' : ''}`}
+        onClick={() => setSidebarOpen(false)}
+      />
+      
       {/* Sidebar */}
       <div className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
         <div className="sidebar-header">
-          <button onClick={createNewConversation} className="new-chat-btn">
+          <button onClick={() => { createNewConversation(); setSidebarOpen(false); }} className="new-chat-btn">
             + New chat
           </button>
         </div>
@@ -283,7 +289,7 @@ export default function ChatWindow() {
             <div
               key={conversation.id}
               className={`conversation-item ${currentConversationId === conversation.id ? 'active' : ''}`}
-              onClick={() => switchConversation(conversation.id)}
+              onClick={() => { switchConversation(conversation.id); setSidebarOpen(false); }}
             >
               <span className="conversation-title">{conversation.title}</span>
               {conversations.length > 1 && (
@@ -309,7 +315,7 @@ export default function ChatWindow() {
           <button onClick={() => setSidebarOpen(!sidebarOpen)} className="sidebar-toggle">
             ☰
           </button>
-          <h3 className="chat-title">Monica AI</h3>
+          <h3 className="chat-title">Monica</h3>
           <div className="spacer" />
         </div>
         
@@ -322,15 +328,15 @@ export default function ChatWindow() {
         
         <div ref={messagesContainerRef} className="messages" aria-live="polite" aria-label="Chat messages">
           {messages.map((m, idx) => (
-            <div key={idx} className={`message-row ${m.role === 'user' ? 'user' : 'abby'}`}>
-              <div className={`message-bubble ${m.role === 'user' ? 'user' : 'abby'}`}>
+            <div key={idx} className={`message-row ${m.role === 'user' ? 'user' : 'monica'}`}>
+              <div className={`message-bubble ${m.role === 'user' ? 'user' : 'monica'}`}>
                 {m.content}
               </div>
             </div>
           ))}
           
           {loading && (
-            <div className="message-row abby">
+            <div className="message-row monica">
               <div className="typing-indicator">
                  Monica AI is thinking<span className="typing-dots"></span>
               </div>
