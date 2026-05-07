@@ -58,9 +58,18 @@ export async function POST({ request }) {
     if (!res.ok) {
       const errText = await res.text();
       console.error('OpenAI API error:', res.status, errText);
+      
+      // Handle specific error cases with helpful messages
       if (res.status === 429) {
-        throw new Error('AI service is busy (rate limit). Please wait a moment and try again.');
+        throw new Error('OpenAI rate limit reached. Check your API credits at https://platform.openai.com/usage');
       }
+      if (res.status === 401) {
+        throw new Error('Invalid OpenAI API key. Please check OPENAI_API_KEY in Vercel environment variables.');
+      }
+      if (res.status === 404) {
+        throw new Error('Model not found. Check OPENAI_MODEL setting (current: ' + model + ')');
+      }
+      
       throw new Error(`AI service error (${res.status}). Please try again.`);
     }
 
