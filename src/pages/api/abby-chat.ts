@@ -14,10 +14,10 @@ function getApiKey() {
   return GROQ_API_KEYS[currentKeyIndex] || '';
 }
 
+// Round-robin: move to next key after each request (distribute load evenly)
 function rotateApiKey() {
   if (GROQ_API_KEYS.length <= 1) return;
   currentKeyIndex = (currentKeyIndex + 1) % GROQ_API_KEYS.length;
-  console.log(`Rotating to API key index ${currentKeyIndex}`);
 }
 
 export async function POST({ request }) {
@@ -63,7 +63,7 @@ export async function POST({ request }) {
       temperature
     };
 
-    // Try each API key in rotation on rate limit (429)
+    // Try each API key in round-robin fashion
     let lastError = null;
     for (let attempt = 0; attempt < GROQ_API_KEYS.length; attempt++) {
       const currentKey = getApiKey();
@@ -76,6 +76,9 @@ export async function POST({ request }) {
         },
         body: JSON.stringify(payload)
       });
+
+      // Rotate to next key for next request (distribute load)
+      rotateApiKey();
 
       if (res.ok) {
         const data = await res.json();
@@ -95,10 +98,9 @@ export async function POST({ request }) {
       
       // Handle specific error cases
       if (res.status === 429) {
-        // Rate limited, just rotate to next key immediately
+        // Rate limited on this key, try next one
         lastError = `Rate limit reached on API key ${currentKeyIndex + 1}/${GROQ_API_KEYS.length}. Trying next key...`;
         console.warn(lastError);
-        rotateApiKey();
         continue;
       }
       
@@ -106,7 +108,6 @@ export async function POST({ request }) {
         // Invalid key, try next key
         lastError = `Invalid API key ${currentKeyIndex + 1}/${GROQ_API_KEYS.length}. Trying next key...`;
         console.warn(lastError);
-        rotateApiKey();
         continue;
       }
       
