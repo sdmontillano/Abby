@@ -1,19 +1,47 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import '../styles/chatgpt.css'
 
-const LS_HISTORY = 'abby chat history'
-const LS_PERSONA = 'abby persona'
-const LS_CONVERSATIONS = 'abby conversations'
-const LS_CURRENT_CONVERSATION = 'abby current conversation'
+interface Message {
+  role: 'user' | 'monica'
+  content: string
+}
+
+interface Conversation {
+  id: string
+  title: string
+  messages: Message[]
+  createdAt: string
+  updatedAt: string
+}
+
+interface Persona {
+  name?: string
+  tone?: string
+  goals?: string[]
+  loves?: string[]
+  dislikes?: string[]
+  boundaries?: string[]
+}
+
+interface ApiResponse {
+  reply?: string
+  error?: string
+}
+
+const LS_HISTORY = 'monica chat history'
+const LS_PERSONA = 'monica persona'
+const LS_CONVERSATIONS = 'monica conversations'
+const LS_CURRENT_CONVERSATION = 'monica current conversation'
 
 export default function ChatWindow() {
-  const [messages, setMessages] = useState([])
+  const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
-  const [conversations, setConversations] = useState([])
-  const [currentConversationId, setCurrentConversationId] = useState(null)
+  const [conversations, setConversations] = useState<Conversation[]>([])
+  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(true)
-  const endRef = useRef(null)
+  const [error, setError] = useState<string | null>(null)
+  const endRef = useRef<HTMLDivElement>(null)
 
   // Load conversations from localStorage
   useEffect(() => {
@@ -22,7 +50,7 @@ export default function ChatWindow() {
       const currentId = localStorage.getItem(LS_CURRENT_CONVERSATION)
       
       if (savedConversations) {
-        const parsed = JSON.parse(savedConversations)
+        const parsed = JSON.parse(savedConversations) as Conversation[]
         setConversations(parsed)
         
         if (currentId && parsed.find(c => c.id === currentId)) {
@@ -38,8 +66,8 @@ export default function ChatWindow() {
       } else {
         const oldHistory = localStorage.getItem(LS_HISTORY)
         if (oldHistory) {
-          const oldMessages = JSON.parse(oldHistory)
-          const newConversation = {
+          const oldMessages = JSON.parse(oldHistory) as Message[]
+          const newConversation: Conversation = {
             id: Date.now().toString(),
             title: 'New Chat',
             messages: oldMessages,
@@ -51,22 +79,27 @@ export default function ChatWindow() {
           setMessages(oldMessages)
         }
       }
-    } catch {
-      // ignore
+    } catch (err) {
+      console.error('Error loading conversations:', err)
+      setError('Failed to load conversation history')
     }
   }, [])
 
   // Save conversations to localStorage
   useEffect(() => {
     if (conversations.length > 0 && currentConversationId) {
-      const updatedConversations = conversations.map(conv => 
-        conv.id === currentConversationId 
-          ? { ...conv, messages, updatedAt: new Date().toISOString() }
-          : conv
-      )
-      setConversations(updatedConversations)
-      localStorage.setItem(LS_CONVERSATIONS, JSON.stringify(updatedConversations))
-      localStorage.setItem(LS_CURRENT_CONVERSATION, currentConversationId)
+      try {
+        const updatedConversations = conversations.map(conv => 
+          conv.id === currentConversationId 
+            ? { ...conv, messages, updatedAt: new Date().toISOString() }
+            : conv
+        )
+        setConversations(updatedConversations)
+        localStorage.setItem(LS_CONVERSATIONS, JSON.stringify(updatedConversations))
+        localStorage.setItem(LS_CURRENT_CONVERSATION, currentConversationId)
+      } catch (err) {
+        console.error('Error saving conversations:', err)
+      }
     }
   }, [messages, currentConversationId])
 
@@ -77,7 +110,7 @@ export default function ChatWindow() {
 
   // Create new conversation
   const createNewConversation = () => {
-    const newConversation = {
+    const newConversation: Conversation = {
       id: Date.now().toString(),
       title: 'New Chat',
       messages: [],
@@ -90,24 +123,26 @@ export default function ChatWindow() {
     setCurrentConversationId(newConversation.id)
     setMessages([])
     setInput('')
+    setError(null)
     
     localStorage.setItem(LS_CONVERSATIONS, JSON.stringify(updatedConversations))
     localStorage.setItem(LS_CURRENT_CONVERSATION, newConversation.id)
   }
 
   // Switch to conversation
-  const switchConversation = (conversationId) => {
+  const switchConversation = (conversationId: string) => {
     const conversation = conversations.find(c => c.id === conversationId)
     if (conversation) {
       setCurrentConversationId(conversationId)
       setMessages(conversation.messages)
       setInput('')
+      setError(null)
       localStorage.setItem(LS_CURRENT_CONVERSATION, conversationId)
     }
   }
 
   // Delete conversation
-  const deleteConversation = (conversationId) => {
+  const deleteConversation = (conversationId: string) => {
     if (conversations.length <= 1) return
     
     const updatedConversations = conversations.filter(c => c.id !== conversationId)
@@ -124,28 +159,31 @@ export default function ChatWindow() {
   }
 
   // Generate conversation title from first message
-  const generateConversationTitle = (message) => {
+  const generateConversationTitle = (message: string): string => {
     const words = message.split(' ').slice(0, 4)
     return words.join(' ') + (message.split(' ').length > 4 ? '...' : '')
   }
 
   // Load persona
-  const persona = useMemo(() => {
+  const persona = useMemo<Persona | null>(() => {
     try {
       const p = localStorage.getItem(LS_PERSONA)
       return p ? JSON.parse(p) : null
-    } catch {
+    } catch (err) {
+      console.error('Error loading persona:', err)
       return null
     }
   }, [])
 
-  // Send message - calls OpenAI API
-  async function send(message) {
+  // Send message - calls OpenAI API with full conversation history
+  async function send(message: string) {
     if (!message?.trim()) return
+    
+    setError(null)
     
     // Update conversation title if it's the first message
     if (messages.length === 0 && currentConversationId) {
-      const title = generateConversationTitle(message);
+      const title = generateConversationTitle(message)
       const updatedConversations = conversations.map(conv => 
         conv.id === currentConversationId 
           ? { ...conv, title, updatedAt: new Date().toISOString() }
@@ -155,23 +193,36 @@ export default function ChatWindow() {
       localStorage.setItem(LS_CONVERSATIONS, JSON.stringify(updatedConversations))
     }
     
-    const userMsg = { role: 'user', content: message }
+    const userMsg: Message = { role: 'user', content: message }
     const next = [...messages, userMsg]
     setMessages(next)
     setInput('')
     setLoading(true)
     
-    // Call the API
+    // Call the API with full conversation history
     try {
       const res = await fetch('/api/abby-chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message, persona })
+        body: JSON.stringify({ messages: next, persona })
       })
-      const data = await res.json()
+      
+      // Check if response is JSON before parsing
+      const contentType = res.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await res.text()
+        console.error('Non-JSON response:', text.substring(0, 200))
+        throw new Error('Server returned an invalid response. Please check deployment and API configuration.')
+      }
+      
+      const data = (await res.json()) as ApiResponse
+      
+      if (!res.ok) {
+        throw new Error(data?.error || `Server error (${res.status})`)
+      }
       
       if (data?.reply) {
-        const aiMsg = { role: 'abby', content: data.reply }
+        const aiMsg: Message = { role: 'monica', content: data.reply }
         const updated = [...next, aiMsg]
         setMessages(updated)
         const convUpdates = conversations.map(conv => 
@@ -182,15 +233,16 @@ export default function ChatWindow() {
         setConversations(convUpdates)
         localStorage.setItem(LS_CONVERSATIONS, JSON.stringify(convUpdates))
       } else {
-        const errorMsg = data?.error ?? 'Sorry, I could not get a response. Please try again.'
-        const updated = [...next, { role: 'abby', content: errorMsg }]
-        setMessages(updated)
+        throw new Error(data?.error || 'Empty response from Monica AI')
       }
     } catch (err) {
-      const errorReply = 'Error: Could not connect to Abby. Please check your internet connection.'
-      const updated = [...next, { role: 'abby', content: errorReply }]
-      setMessages(updated)
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred'
       console.error('API Error:', err)
+      
+      // Don't add error as a message, just show error banner
+      setError(errorMessage)
+      // Revert the user message since we didn't get a response
+      setMessages(messages)
     } finally {
       setLoading(false)
     }
@@ -221,6 +273,7 @@ export default function ChatWindow() {
                     deleteConversation(conversation.id)
                   }}
                   className="delete-btn"
+                  aria-label="Delete conversation"
                 >
                   ×
                 </button>
@@ -236,11 +289,18 @@ export default function ChatWindow() {
           <button onClick={() => setSidebarOpen(!sidebarOpen)} className="sidebar-toggle">
             ☰
           </button>
-          <h3 className="chat-title">Abby AI</h3>
+          <h3 className="chat-title">Monica AI</h3>
           <div className="spacer" />
         </div>
         
-        <div className="messages" aria-live="polite">
+        {error && (
+          <div className="error-banner" role="alert">
+            {error}
+            <button onClick={() => setError(null)} className="close-error">×</button>
+          </div>
+        )}
+        
+        <div className="messages" aria-live="polite" aria-label="Chat messages">
           {messages.map((m, idx) => (
             <div key={idx} className={`message-row ${m.role === 'user' ? 'user' : 'abby'}`}>
               <div className={`message-bubble ${m.role === 'user' ? 'user' : 'abby'}`}>
@@ -252,7 +312,7 @@ export default function ChatWindow() {
           {loading && (
             <div className="message-row abby">
               <div className="typing-indicator">
-                Abby AI is thinking<span className="typing-dots"></span>
+                 Monica AI is thinking<span className="typing-dots"></span>
               </div>
             </div>
           )}
@@ -265,19 +325,21 @@ export default function ChatWindow() {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask Abby AI anything..."
+              placeholder="Ask Monica AI anything..."
               className="message-input"
               onKeyDown={(e) => {
-                if (e.key === 'Enter') send(input)
+                if (e.key === 'Enter' && !loading) send(input)
               }}
-              aria-label="Message to Abby"
+              aria-label="Message to Monica"
+              disabled={loading}
             />
             <button
               onClick={() => send(input)}
               className="send-btn"
               aria-label="Send"
+              disabled={loading || !input.trim()}
             >
-              Send
+              {loading ? 'Sending...' : 'Send'}
             </button>
           </div>
         </div>

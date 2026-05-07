@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react'
 
-const LS_PERSONA = 'abby persona'
+const LS_PERSONA = 'monica persona'
 
 export default function PersonaEditor({}) {
   const [persona, setPersona] = useState({
-    name: 'Abby AI',
-    tone: 'warm, concise, a bit witty',
-    loves: 'clarity, practical tips',
-    dislikes: 'jargon, negativity',
-    boundaries: 'no sensitive data without consent'
+    name: 'Monica AI',
+    tone: 'warm, witty, slightly sassy, intelligent, and empathetic',
+    traits: 'curious, helpful, occasionally uses humor, asks great follow-up questions, celebrates user wins',
+    capabilities: 'Answer any question, Help with technical tasks, Creative work, Practical advice, Remember conversation context',
+    loves: 'clear questions, curiosity, creative challenges, helping people learn, good jokes',
+    dislikes: 'vague requests without context, jargon without explanation, negativity, giving up easily',
+    boundaries: 'No sensitive personal data storage without consent, No illegal content or harmful advice, Admit when unsure and offer to find more info, Always be honest about limitations'
   })
 
   // Load existing persona on mount
@@ -28,26 +30,34 @@ export default function PersonaEditor({}) {
   }
 
   return (
-    <div className="persona-editor" aria-label="Abby Persona Editor">
+    <div className="persona-editor" aria-label="Monica Persona Editor">
       <div>
         <label>Name</label>
         <input value={persona.name} onChange={e => update({ ...persona, name: e.target.value })} />
       </div>
       <div>
         <label>Tone</label>
-        <input value={persona.tone} onChange={e => update({ ...persona, tone: e.target.value })} />
+        <input value={persona.tone} onChange={e => update({ ...persona, tone: e.target.value })} placeholder="e.g., warm, witty, intelligent" />
       </div>
       <div>
-        <label>Loves</label>
-        <input value={persona.loves} onChange={e => update({ ...persona, loves: e.target.value })} />
+        <label>Traits (comma-separated)</label>
+        <input value={persona.traits} onChange={e => update({ ...persona, traits: e.target.value })} placeholder="e.g., curious, helpful, funny" />
       </div>
       <div>
-        <label>Dislikes</label>
-        <input value={persona.dislikes} onChange={e => update({ ...persona, dislikes: e.target.value })} />
+        <label>Capabilities (comma-separated)</label>
+        <input value={persona.capabilities} onChange={e => update({ ...persona, capabilities: e.target.value })} placeholder="e.g., Answer questions, Code help" />
       </div>
       <div>
-        <label>Boundaries</label>
-        <input value={persona.boundaries} onChange={e => update({ ...persona, boundaries: e.target.value })} />
+        <label>Loves (comma-separated)</label>
+        <input value={persona.loves} onChange={e => update({ ...persona, loves: e.target.value })} placeholder="e.g., clarity, curiosity" />
+      </div>
+      <div>
+        <label>Dislikes (comma-separated)</label>
+        <input value={persona.dislikes} onChange={e => update({ ...persona, dislikes: e.target.value })} placeholder="e.g., jargon, negativity" />
+      </div>
+      <div>
+        <label>Boundaries (comma-separated)</label>
+        <input value={persona.boundaries} onChange={e => update({ ...persona, boundaries: e.target.value })} placeholder="e.g., No illegal content" />
       </div>
     </div>
   )
