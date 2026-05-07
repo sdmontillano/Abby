@@ -9,15 +9,38 @@ const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const GROQ_API_KEYS = (process.env.GROQ_API_KEY || '').split(',').map(k => k.trim()).filter(Boolean);
 let currentKeyIndex = 0;
 
-// Helper to get current key and rotate on rate limit
+// Track rate limit reset times per key (per-minute limit: ~30 req/min per key)
+const keyRateLimitReset = new Map<number, number>();
+
+// Helper to get current key
 function getApiKey() {
   return GROQ_API_KEYS[currentKeyIndex] || '';
 }
 
+// Check if a key is still in cooldown period
+function isKeyRateLimited(index: number): boolean {
+  const resetTime = keyRateLimitReset.get(index);
+  if (resetTime && Date.now() < resetTime) {
+    return true; // Still in cooldown
+  }
+  return false;
+}
+
 function rotateApiKey() {
   if (GROQ_API_KEYS.length <= 1) return; // No rotation if only one key
-  currentKeyIndex = (currentKeyIndex + 1) % GROQ_API_KEYS.length;
-  console.log(`Rotating to API key index ${currentKeyIndex}`);
+  
+  const originalIndex = currentKeyIndex;
+  do {
+    currentKeyIndex = (currentKeyIndex + 1) % GROQ_API_KEYS.length;
+    // Skip keys that are still rate-limited
+    if (!isKeyRateLimited(currentKeyIndex)) {
+      console.log(`Rotating to API key index ${currentKeyIndex}`);
+      return;
+    }
+  } while (currentKeyIndex !== originalIndex);
+  
+  // All keys are rate-limited
+  console.warn('All keys are currently rate-limited');
 }
 
 export async function POST({ request }) {
@@ -68,6 +91,13 @@ export async function POST({ request }) {
     for (let attempt = 0; attempt < GROQ_API_KEYS.length; attempt++) {
       const currentKey = getApiKey();
       
+      // Skip keys that are still in rate limit cooldown
+      if (isKeyRateLimited(currentKeyIndex)) {
+        console.warn(`Key ${currentKeyIndex + 1} is rate-limited until ${new Date(keyRateLimitReset.get(currentKeyIndex)!).toISOString()}. Skipping...`);
+        rotateApiKey();
+        continue;
+      }
+      
       const res = await fetch(GROQ_API_URL, {
         method: 'POST',
         headers: {
@@ -95,8 +125,9 @@ export async function POST({ request }) {
       
       // Handle specific error cases
       if (res.status === 429) {
-        // Rate limited, try next key
-        lastError = `Rate limit reached on API key ${currentKeyIndex + 1}/${GROQ_API_KEYS.length}. Trying next key...`;
+        // Rate limited - mark this key as rate-limited for 60 seconds (per-minute limit)
+        keyRateLimitReset.set(currentKeyIndex, Date.now() + 60000);
+        lastError = `Rate limit reached on API key ${currentKeyIndex + 1}/${GROQ_API_KEYS.length}. Cooling down for 60s. Trying next key...`;
         console.warn(lastError);
         rotateApiKey();
         continue;
@@ -114,7 +145,13 @@ export async function POST({ request }) {
       throw new Error(`AI service error (${res.status}). Details: ${errText}`);
     }
 
-    // All keys exhausted
+    // All keys exhausted - check if all are rate-limited
+    const allRateLimited = GROQ_API_KEYS.every((_, index) => isKeyRateLimited(index));
+    if (allRateLimited) {
+      const resetTime = Math.min(...Array.from(keyRateLimitReset.values()));
+      throw new Error(`All ${GROQ_API_KEYS.length} API keys are rate-limited. Please wait about ${Math.ceil((resetTime - Date.now()) / 1000)} seconds before trying again. (Per-minute limit: ~30 req/min per key)`);
+    }
+    
     throw new Error(`All ${GROQ_API_KEYS.length} API keys exhausted. Free tier: 14,400 requests/day per key. Please add more keys or wait.`);
     
   } catch (e) {
