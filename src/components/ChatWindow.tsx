@@ -41,7 +41,9 @@ export default function ChatWindow() {
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showScrollTop, setShowScrollTop] = useState(false)
   const endRef = useRef<HTMLDivElement>(null)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
 
   // Load conversations from localStorage
   useEffect(() => {
@@ -107,6 +109,24 @@ export default function ChatWindow() {
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
+
+  // Show/hide scroll-to-top button
+  useEffect(() => {
+    const container = messagesContainerRef.current
+    if (!container) return
+    
+    const handleScroll = () => {
+      setShowScrollTop(container.scrollTop > 300)
+    }
+    
+    container.addEventListener('scroll', handleScroll)
+    return () => container.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  // Scroll to top function
+  const scrollToTop = () => {
+    messagesContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
   // Create new conversation
   const createNewConversation = () => {
@@ -300,7 +320,7 @@ export default function ChatWindow() {
           </div>
         )}
         
-        <div className="messages" aria-live="polite" aria-label="Chat messages">
+        <div ref={messagesContainerRef} className="messages" aria-live="polite" aria-label="Chat messages">
           {messages.map((m, idx) => (
             <div key={idx} className={`message-row ${m.role === 'user' ? 'user' : 'abby'}`}>
               <div className={`message-bubble ${m.role === 'user' ? 'user' : 'abby'}`}>
@@ -318,6 +338,16 @@ export default function ChatWindow() {
           )}
           <div ref={endRef} />
         </div>
+        
+        {/* Scroll to top button */}
+        <button 
+          className={`scroll-top-btn ${showScrollTop ? 'visible' : ''}`}
+          onClick={scrollToTop}
+          aria-label="Scroll to top"
+          title="Scroll to top"
+        >
+          ↑
+        </button>
         
         <div className="input-area" role="group" aria-label="Message input">
           <div className="input-container">

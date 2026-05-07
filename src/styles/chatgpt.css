@@ -19,6 +19,7 @@
 
 html {
   height: 100%;
+  overflow-y: auto;
 }
 
 body {
@@ -27,14 +28,44 @@ body {
   font-family: 'Söhne', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   background-color: var(--bg-dark);
   color: var(--text-primary);
-  overflow: hidden;
-  height: 100%;
   min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Scroll-to-top button */
+.scroll-top-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow);
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.scroll-top-btn:hover {
+  background: var(--primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 163, 127, 0.4);
+}
+
+.scroll-top-btn.visible {
+  display: flex;
 }
 
 .chatgpt-layout {
   display: flex;
-  height: 100vh;
+  min-height: 100vh;
   width: 100%;
   overflow: hidden;
 }
@@ -195,7 +226,7 @@ body {
   display: flex;
   flex-direction: column;
   background-color: var(--bg-dark);
-  height: 100vh;
+  min-height: 0;
   overflow: hidden;
 }
 
@@ -242,12 +273,14 @@ body {
 .messages {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 24px 20px;
   display: flex;
   flex-direction: column;
   gap: 16px;
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
+  min-height: 0;
 }
 
 .messages::-webkit-scrollbar {
