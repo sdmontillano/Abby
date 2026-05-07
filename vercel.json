@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/astro"
+    }
+  ],
+  "functions": {
+    "**.ts": {
+      "runtime": "nodejs20.x"
+    }
+  }
+}

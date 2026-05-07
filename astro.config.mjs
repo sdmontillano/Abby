@@ -1,9 +1,11 @@
 import { defineConfig } from 'astro/config'
 import react from '@astrojs/react'
-import vercel from '@astrojs/vercel/serverless'
+import vercel from '@astrojs/vercel'
 
 export default defineConfig({
   integrations: [react()],
   output: 'server',
-  adapter: vercel()
+  adapter: vercel({
+    runtime: 'nodejs20.x'
+  })
 })
