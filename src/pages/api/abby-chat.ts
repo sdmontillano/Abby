@@ -7,7 +7,9 @@ const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 export async function POST({ request }) {
   try {
-    const { messages: clientMessages, persona } = await request.json();
+    const body = await request.json();
+    const clientMessages = body.messages || [];
+    const persona = body.persona;
 
     // Validate request
     if (!Array.isArray(clientMessages) || clientMessages.length === 0) {
