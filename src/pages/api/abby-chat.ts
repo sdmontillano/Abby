@@ -29,7 +29,7 @@ export async function POST({ request }) {
     }
 
     const systemPrompt = buildSystemPrompt(persona);
-    const model = process.env.GROQ_MODEL || 'llama3-8b-8192'; // Free tier model
+    const model = process.env.GROQ_MODEL || 'llama-3.1-8b-instant'; // Free tier model
     const maxTokens = parseInt(process.env.GROQ_MAX_TOKENS || '1000');
     const temperature = parseFloat(process.env.GROQ_TEMPERATURE || '0.7');
 
